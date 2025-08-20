@@ -1,0 +1,27 @@
+app:
+  name: fitness_prediction_api
+  version: 1.0.0
+  description: "A FastAPI-based web app for fitness prediction using ML models."
+
+server:
+  host: "127.0.0.1"
+  port: 8080
+  reload: true
+  log_level: "debug"
+
+model:
+  path: "app/model.pkl"   # wherever your ML model is saved
+  input_features:
+    - age
+    - weight
+    - height
+    - gender
+
+logging:
+  level: "INFO"
+  file: "logs/app.log"
+
+ci_cd:
+  python_version: "3.9"
+  framework: "fastapi"
+  testing: "pytest"

@@ -1,72 +1,70 @@
-from fastapi import FastAPI
-import joblib
-import numpy as np
-from pydantic import BaseModel
+from fastapi import FastAPI, Request, Form
+from fastapi.responses import JSONResponse, HTMLResponse
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
+
+from app.schemas import PersonData
+from app.model_utils import predict_fitness
 import os
-from typing import Optional
 
-# Load model
+app = FastAPI(title="Fitness Prediction API")
+
+# Static & templates
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-MODEL_PATH = os.path.join(BASE_DIR, "models", "best_model_Logistic Regression.pkl")
+templates = Jinja2Templates(directory=os.path.join(BASE_DIR, "templates"))
+app.mount("/static", StaticFiles(directory=os.path.join(BASE_DIR, "static")), name="static")
 
-app = FastAPI()
 
-# Health check endpoint
-@app.get("/")
-def health_check():
-    return {"status": "ok", "message": "Fitness prediction API is running"}
+@app.get("/", response_class=HTMLResponse)
+def home(request: Request):
+    return templates.TemplateResponse("index.html", {"request": request})
 
-try:
-    model = joblib.load(MODEL_PATH)
-    print("Model loaded successfully")
-except Exception as e:
-    print(f"Error loading model: {e}")
-    raise
 
-class PersonData(BaseModel):
-    age: float
-    height_cm: float
-    weight_kg: float
-    heart_rate: float
-    blood_pressure: float
-    sleep_hours: Optional[float] = None
-    nutrition_quality: float
-    activity_index: float
-    smokes: str  # 'yes' or 'no'
-    gender: str  # 'M' or 'F'
+@app.get("/health")
+def health():
+    return {"status": "ok"}
 
-@app.post("/predict")
-def predict(data: PersonData):
+
+# ---- API JSON Endpoint ----
+@app.post("/predict", response_class=JSONResponse)
+def predict_api(data: PersonData):
+    """Accept JSON requests"""
     try:
-        # Calculate BMI
-        bmi = data.weight_kg / ((data.height_cm / 100) ** 2)
-        
-        # Convert categorical to numerical
-        smokes_encoded = 1 if data.smokes.lower() == 'yes' else 0
-        gender_M = 1 if data.gender.upper() == 'M' else 0
-        
-        # Handle missing sleep hours
-        sleep_hours = data.sleep_hours if data.sleep_hours is not None else 7.0
-        
-        # Create feature array in correct order
-        features = np.array([[
-            data.age,
-            data.height_cm,
-            data.weight_kg,
-            data.heart_rate,
-            data.blood_pressure,
-            sleep_hours,
-            data.nutrition_quality,
-            data.activity_index,
-            smokes_encoded,
-            bmi,
-            gender_M
-        ]])
-        
-        # Make prediction
-        prediction = model.predict(features)[0]
-        
-        return {"is_fit": bool(prediction)}
-        
+        result = predict_fitness(data)
+        return JSONResponse(content=result)
     except Exception as e:
-        return {"error": str(e)}
+        return JSONResponse(status_code=400, content={"error": str(e)})
+
+
+# ---- Web Form Endpoint ----
+@app.post("/predict-form", response_class=HTMLResponse)
+def predict_form(
+    request: Request,
+    age: float = Form(...),
+    weight: float = Form(...),
+    height: float = Form(...),
+    gender: str = Form(...),
+):
+    """Accept HTML form submissions"""
+    # Convert to schema-compatible dict
+    gender_m = 1 if gender.lower() == "male" else 0
+
+    payload = PersonData(
+        age=age,
+        height_cm=height,
+        weight_kg=weight,
+        heart_rate=70,           # default placeholder
+        blood_pressure=120,      # default placeholder
+        sleep_hours=7,           # default placeholder
+        nutrition_quality=5,     # default placeholder
+        activity_index=5,        # default placeholder
+        smokes=0,                # default placeholder
+        gender_M=gender_m,
+    )
+
+    result = predict_fitness(payload)
+
+    return templates.TemplateResponse(
+        "result.html",
+        {"request": request, "prediction": result},
+    )
