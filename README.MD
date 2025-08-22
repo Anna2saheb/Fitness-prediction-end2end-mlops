@@ -86,8 +86,7 @@ fitness_prediction/
 │── src/                         # All source code (main project logic)
 │   ├── __init__.py
 │   ├── data_preprocessing.py    # Data cleaning & feature engineering
-│   ├── train.py                 # Model training script
-│   ├── evaluate.py              # Model evaluation
+│   ├── model_training.py        # Model training script
 │   ├── predict.py               # Prediction script (for inference)
 │   └── utils/                   # Utility/helper functions
 │       └── logger.py
@@ -96,9 +95,16 @@ fitness_prediction/
 │── models/                      # Saved models & artifacts
 │   └── model.pkl
 │── app/
+|   |--__init__.py
 │   ├── main.py
 │   ├── schemas.py
-│   ├── model_utils.py
+│   |── model_utils.py
+|
+│── templates/                      # Saved models & artifacts
+│   ├── index.html
+│   └── results.html
+│── static/                     # Automation scripts (optional)
+│   └── style.css
 |
 │── tests/                       # Unit & integration tests
 │   ├── test_data_preprocessing.py
@@ -127,6 +133,23 @@ fitness_prediction/
 
   4. install the required packegaes to local env
   pip install requirements.txt
+
+  5 collection on installed packages
+   pip freeze > requirements.txt
+
+## Run the pipelines ##
+1. Run the data preprocessing pipline from local of path "C:\Projects\fitness_prediction> " as 
+python src\data_preprocessing.py
+
+2. Run the modeltraining and evaluation pipline from same path "C:\Projects\fitness_prediction> " as
+python src\model_training.py
+
+3. To check wheather app is working on correct server we can run from same path "C:\Projects\fitness_prediction> " with powershell console as
+uvicorn app.main:app --reload --port 8080 --log-level debug
+
+4. we can access the web app on UI and through Fast API
+ a)http://127.0.0.1:8080 
+ b)python src/predict.py   from same path as "C:\Projects\fitness_prediction> "
 
 ## 🏥 Use Case: Health Insurance Risk Assessment ##
 🎯 Objective
@@ -159,3 +182,60 @@ Faster Underwriting – Automate initial screening and reduce manual workload.b
 ## Data ##
 
 As Windows system has issue to directly load the data from kaggle so I have local downloaded the data, unzipped and then pasted the fitness_dataset.csv file to C:\Projects\fitness_prediction\data\raw directory
+
+
+Got it 👍 You want to document your **FastAPI-based ML app** so it looks professional and standard for GitHub (and later portfolio/resume). Here are some **points you can include**:
+
+---
+
+### 📌 About the App
+
+* **Purpose**: This is a **Fitness Prediction Web Application** that predicts fitness-related outcomes (e.g., BMI category, calorie needs, health risks) based on user inputs such as age, gender, height, and weight.
+* **Tech Stack**:
+
+  * **FastAPI** for building RESTful APIs
+  * **HTML + Jinja2 Templates** for the user interface
+  * **Scikit-learn / ML model** for predictions
+  * **Uvicorn** as the ASGI server
+
+---
+
+### 📌 Key Features
+
+* **User-Friendly Web Form**: Input details like age, height, weight, gender, etc., via a simple HTML form.
+* **REST API Endpoint**: Supports JSON-based POST requests for predictions, useful for integration with other applications.
+* **Fast and Lightweight**: Powered by FastAPI, which provides asynchronous, high-performance APIs.
+* **Scalable Design**: Built with MLOps principles in mind (can be extended to CI/CD pipelines, Dockerization, cloud deployment).
+* **Error Handling**: Provides structured JSON error responses for invalid inputs.
+
+---
+
+### 📌 API Endpoints
+
+* `GET /` → Returns the home page with input form.
+* `POST /predict` → Accepts form input or JSON request body and returns predictions.
+
+---
+
+### 📌 Example API Request
+
+```bash
+curl -X POST "http://127.0.0.1:8080/predict" \
+     -H "Content-Type: application/json" \
+     -d '{"age": 30, "weight": 73, "height": 158, "gender": "Male"}'
+```
+
+---
+
+### 📌 Future Enhancements
+
+* Add **model monitoring & logging** (MLflow / Prometheus).
+* Automate training & retraining with **CI/CD pipeline**.
+* Deploy to **Azure Web App / AWS Lambda / GCP Cloud Run**.
+* Containerize with **Docker + Kubernetes** for scaling.
+
+---
+
+👉 You can put this in your **README.md** or GitHub project description.
+
+Would you like me to **write a full professional README.md template** (with installation, usage, pipeline, deployment instructions) for this project?

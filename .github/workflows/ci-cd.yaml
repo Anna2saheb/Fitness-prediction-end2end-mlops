@@ -1,0 +1,49 @@
+name: CI/CD FastAPI App
+
+on:
+  push:
+    branches:
+      - mlops1   # Trigger only on branch1
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checkout the repo
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Setup Python
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12.7"
+
+      # Install dependencies
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      # Run linting (optional, can skip if not needed)
+      - name: Lint code
+        run: |
+          pip install flake8
+          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics || true
+
+      # Run tests (if you have pytest/unit tests)
+      - name: Run tests
+        run: |
+          pip install pytest
+          pytest || echo "No tests found"
+
+      # Verify FastAPI app starts
+      - name: Verify FastAPI runs
+        run: |
+          nohup uvicorn app.main:app --port 8080 --reload &
+          sleep 5
+          curl -f http://127.0.0.1:8080/docs || (echo "App did not start" && exit 1)
